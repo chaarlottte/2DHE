@@ -5,8 +5,16 @@ class Player {
 
         this.angle = 0;
         this.id = id;
+        this.name = id;
 
         this.speed = 4;
+
+        this.size = 30;
+        this.shape = "square"; // triangle, circle, square
+        this.color = "red";
+
+        this.health = 100;
+        this.maxHealth = 100;
     }
 }
 

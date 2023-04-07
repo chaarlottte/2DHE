@@ -11,8 +11,8 @@ const { UtilitiesClass } = require("./src/utils")
 
 app.use(express.static("client"));
 
-const worldBounds = [60, 60];
-const chunkSize = 40;
+const worldBounds = [20, 20];
+const chunkSize = 120;
 
 const worldGen = new WorldGeneration(worldBounds, chunkSize);
 const world = new World(worldGen);
@@ -22,6 +22,7 @@ const utils = new UtilitiesClass();
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
     world.players[socket.id] = new Player(0, 0, socket.id);
+    world.players[socket.id].color = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`
 
     socket.emit("initialize", { world, playerId: socket.id });
     socket.broadcast.emit("playerJoined", world.players[socket.id]);

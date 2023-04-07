@@ -10,6 +10,7 @@ class Controller {
             left: false,
             up: false,
             down: false,
+            sprint: false,
         };
     }
 
@@ -34,11 +35,15 @@ class Controller {
     }*/
 
     doMovement() {
-        const newX = this.localPlayer.x + (this.controls.right - this.controls.left) * this.localPlayer.speed;
-        const newY = this.localPlayer.y + (this.controls.down - this.controls.up) * this.localPlayer.speed;
+        let speed = this.localPlayer.speed;
+        if(this.controls.sprint)
+            speed += 2
 
-        const mapWidth = this.world.map[0].length * 40;
-        const mapHeight = this.world.map.length * 40;
+        const newX = this.localPlayer.x + (this.controls.right - this.controls.left) * speed;
+        const newY = this.localPlayer.y + (this.controls.down - this.controls.up) * speed;
+
+        const mapWidth = this.world.map[0].length * this.world.worldgen.tileSize;
+        const mapHeight = this.world.map.length * this.world.worldgen.tileSize;
 
         const leftBound = -mapWidth / 2;
         const rightBound = mapWidth / 2;
@@ -65,6 +70,8 @@ class Controller {
             this.controls.up = true;
         } else if (e.keyCode == 40 || e.keyCode == 83) {
             this.controls.down = true;
+        } else if (e.keyCode == 16) {
+            this.controls.sprint = true;
         }
     };
     
@@ -77,6 +84,8 @@ class Controller {
             this.controls.up = false;
         } else if (e.keyCode == 40 || e.keyCode == 83) {
             this.controls.down = false;
+        } else if (e.keyCode == 16) {
+            this.controls.sprint = false;
         }
     };
     
