@@ -8,9 +8,6 @@ class Renderer {
         this.fps = 0;
 
         this.chunkSize = 40;
-
-        this.image = new Image();
-        this.image.src = "https://www.screamerscostumes.com/app/uploads/2021/10/75058_fake_butt__12207-1.jpg";
     }
 
     renderLoop() {
@@ -30,7 +27,7 @@ class Renderer {
         this.drawVisisbleChunks();
 
         Object.values(this.game.world.players).forEach((player) => {
-            this.drawAsscheeks(player);
+            this.drawPlayer(player);
         });
         this.ctx.restore();
 
@@ -88,15 +85,6 @@ class Renderer {
         this.ctx.rotate(player.angle);
         this.ctx.fillStyle = "blue";
         this.ctx.fillRect(-5, -5, 10, 10);
-        this.ctx.restore();
-    }
-
-    drawAsscheeks(player) {
-        let size = 100;
-        this.ctx.save();
-        this.ctx.translate(player.x, player.y);
-        this.ctx.rotate(player.angle);
-        this.ctx.drawImage(this.image, -size / 2, -size / 2, size, size);
         this.ctx.restore();
     }
 
