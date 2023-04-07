@@ -19,6 +19,10 @@ const world = new World(worldGen);
 
 const utils = new UtilitiesClass();
 
+hello = () => {
+    console.log("hello")
+}
+
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
     world.players[socket.id] = new Player(0, 0, socket.id);

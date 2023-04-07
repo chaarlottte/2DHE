@@ -9,8 +9,8 @@ class Player {
 
         this.speed = 4;
 
-        this.size = 30;
-        this.shape = "cat"; // triangle, circle, square, cat
+        this.size = 20;
+        this.shape = "triangle"; // triangle, circle, square, cat
         this.color = "red";
 
         this.health = 100;

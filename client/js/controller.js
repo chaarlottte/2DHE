@@ -108,20 +108,22 @@ class Controller {
         };
 
         for (const obj of gameObjects) {
-            const objBox = {
-                x: obj.x + obj.boundingBox.x,
-                y: obj.y + obj.boundingBox.y,
-                w: obj.boundingBox.w,
-                h: obj.boundingBox.h,
-            };
+            if (utils.isGameObjectVisible(obj, player, this.canvas.width, this.canvas.height)) {
+                const objBox = {
+                    x: obj.x + obj.boundingBox.x,
+                    y: obj.y + obj.boundingBox.y,
+                    w: obj.boundingBox.w,
+                    h: obj.boundingBox.h,
+                };
 
-            if (
-                playerBox.x < objBox.x + objBox.w &&
-                playerBox.x + playerBox.w > objBox.x &&
-                playerBox.y < objBox.y + objBox.h &&
-                playerBox.y + playerBox.h > objBox.y
-            ) {
-                return true;
+                if (
+                    playerBox.x < objBox.x + objBox.w &&
+                    playerBox.x + playerBox.w > objBox.x &&
+                    playerBox.y < objBox.y + objBox.h &&
+                    playerBox.y + playerBox.h > objBox.y
+                ) {
+                    return true;
+                }
             }
         }
 

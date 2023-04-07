@@ -1,3 +1,7 @@
+hiiii = () => {
+    console.log("hiiii")
+}
+
 class Game {
     constructor(canvas, ctx) {
         this.canvas = canvas;

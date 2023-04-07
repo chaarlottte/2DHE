@@ -33,8 +33,14 @@ class Renderer {
             this.drawPlayer(player);
         });
 
-        for (const obj of Object.values(this.game.world.gameObjects)) {
+        /*for (const obj of Object.values(this.game.world.gameObjects)) {
             this.renderGameObject(obj);
+        }*/
+
+        for(const obj of Object.values(this.game.world.gameObjects)) {
+            if (utils.isGameObjectVisible(obj, this.game.localPlayer, this.canvas.width, this.canvas.height)) {
+                this.renderGameObject(obj);
+            }
         }
 
         this.ctx.restore();
@@ -196,7 +202,7 @@ class Renderer {
         this.ctx.restore();
     }
 
-    renderGameObject(obj) {
+    /*renderGameObject(obj) {
         // Draw the game object as a blank square
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
@@ -210,7 +216,22 @@ class Renderer {
             obj.boundingBox.w,
             obj.boundingBox.h
         );
+    }*/
+
+    renderGameObject(gameObject) {
+        this.ctx.fillStyle = gameObject.color;
+
+        if (gameObject.type === 'rectangle') {
+            this.ctx.fillRect(gameObject.x, gameObject.y, gameObject.w, gameObject.h);
+        } else if (gameObject.type === 'circle') {
+            this.ctx.beginPath();
+            this.ctx.arc(gameObject.x, gameObject.y, gameObject.w / 2, 0, Math.PI * 2);
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
+        // Add more shape types if needed
     }
+      
 
     drawChunk(chunk) {
         this.ctx.fillStyle = chunk.color;

@@ -26,7 +26,7 @@ const { GameObject, BoundingBox } = require("./gameobject")
     }
 }*/
 
-function createHouse(x, y, houseWidth, houseHeight, wallThickness, doorWidth, doorHeight, doorWall) {
+function createHouse(x, y, houseWidth, houseHeight, wallThickness, doorWidth, doorWall) {
     const walls = [];
 
     const leftWall = new BoundingBox(0, 0, wallThickness, houseHeight);
@@ -73,7 +73,30 @@ function createHouse(x, y, houseWidth, houseHeight, wallThickness, doorWidth, do
 
     return walls;
 }
-  
+
+function createHouseJSON(x, y, houseWidth, houseHeight, wallThickness, doorWidth, doorWall) {
+    const walls = createHouse(x, y, houseWidth, houseHeight, wallThickness, doorWidth, doorWall);
+    const houseJSON = [];
+
+    for (const wall of walls) {
+        houseJSON.push({
+            type: "rectangle",
+            x: wall.x,
+            y: wall.y,
+            w: wall.boundingBox.w,
+            h: wall.boundingBox.h,
+            color: "#000000",
+            boundingBox: {
+                x: wall.boundingBox.x,
+                y: wall.boundingBox.y,
+                w: wall.boundingBox.w,
+                h: wall.boundingBox.h
+            }
+        });
+    }
+
+    return houseJSON;
+}
   
 class World {
     constructor(worldgen) {
@@ -82,16 +105,18 @@ class World {
         this.players = { };
         this.gameObjects = [ ];
 
-        const houseWalls = createHouse(200, 200, 300, 200, 10, 80, 10, "top");
+        let houseWidth = 300, houseHeight = 200, wallThickness = 20;
+
+        const houseWalls = createHouseJSON(200, 200, houseWidth, houseHeight, wallThickness, 80, "top");
         this.gameObjects.push(...houseWalls);
 
-        const houseWalls2 = createHouse(200, 450, 300, 200, 10, 80, 10, "right");
+        const houseWalls2 = createHouseJSON(200, 450, houseWidth, houseHeight, wallThickness, 80, "right");
         this.gameObjects.push(...houseWalls2);
 
-        const houseWalls3 = createHouse(200, 800, 300, 200, 10, 80, 10, "left");
+        const houseWalls3 = createHouseJSON(200, 800, houseWidth, houseHeight, wallThickness, 80, "left");
         this.gameObjects.push(...houseWalls3);
 
-        const houseWalls4 = createHouse(200, 1050, 300, 200, 10, 80, 10, "bottom");
+        const houseWalls4 = createHouseJSON(200, 1050, houseWidth, houseHeight, wallThickness, 80, "bottom");
         this.gameObjects.push(...houseWalls4);
     }
 }
