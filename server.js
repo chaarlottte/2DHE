@@ -44,23 +44,11 @@ io.on("connection", (socket) => {
       
         const newX = playerData.x;
         const newY = playerData.y;
-        const mapWidth = world.map[0].length * Chunk.size;
-        const mapHeight = world.map.length * Chunk.size;
-      
-        const leftBound = -mapWidth / 2;
-        const rightBound = mapWidth / 2;
-        const topBound = mapHeight / 2;
-        const bottomBound = -mapHeight / 2;
-      
-        if (newX >= leftBound && newX <= rightBound) {
-            player.x = newX;
-        }
-      
-        if (newY >= bottomBound && newY <= topBound) {
-            player.y = newY;
-        }
-      
+        player.x = newX;
+        player.y = newY;
         player.angle = playerData.angle;
+
+        // console.log(playerData)
       
         socket.broadcast.emit("playerMoved", { playerId: socket.id, x: player.x, y: player.y, angle: player.angle });
     });

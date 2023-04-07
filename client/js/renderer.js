@@ -8,6 +8,9 @@ class Renderer {
         this.fps = 0;
 
         this.chunkSize = this.game.world.worldgen.tileSize;
+
+        this.catImage = new Image();
+        this.catImage.src = "https://static-00.iconduck.com/assets.00/cat-face-emoji-512x455-gda5rvrc.png";
     }
 
     renderLoop() {
@@ -29,6 +32,11 @@ class Renderer {
         Object.values(this.game.world.players).forEach((player) => {
             this.drawPlayer(player);
         });
+
+        for (const obj of Object.values(this.game.world.gameObjects)) {
+            this.renderGameObject(obj);
+        }
+
         this.ctx.restore();
 
         this.renderHUD();
@@ -118,6 +126,11 @@ class Renderer {
 
                 this.drawHands(radius);
                 break;
+            case "cat":
+                let cSize = 100;
+                this.ctx.rotate(-Math.PI / 2);
+                this.ctx.drawImage(this.catImage, -cSize / 2, -cSize / 2, cSize, cSize);
+                break;
         }
         
         this.ctx.restore();
@@ -181,6 +194,22 @@ class Renderer {
         this.ctx.fill();
         this.ctx.closePath();
         this.ctx.restore();
+    }
+
+    renderGameObject(obj) {
+        // Draw the game object as a blank square
+        this.ctx.fillStyle = "black";
+        this.ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+
+        // Draw the bounding box as a hollow red rectangle
+        this.ctx.strokeStyle = "red";
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(
+            obj.x + obj.boundingBox.x,
+            obj.y + obj.boundingBox.y,
+            obj.boundingBox.w,
+            obj.boundingBox.h
+        );
     }
 
     drawChunk(chunk) {

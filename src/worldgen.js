@@ -1,4 +1,5 @@
 const { World, Chunk } = require("./world")
+const { GameObject, BoundingBox } = require("./gameobject")
 
 class WorldGeneration {
     constructor(worldSize, tileSize) {
@@ -7,12 +8,6 @@ class WorldGeneration {
     }
 
     createMap() {
-        /*return [
-            [new Chunk(-1, 1), new Chunk(0, 1), new Chunk(1, 1)],
-            [new Chunk(-1, 0), new Chunk(0, 0), new Chunk(1, 0)],
-            [new Chunk(-1, -1), new Chunk(0, -1), new Chunk(1, -1)],
-        ];*/
-
         const [rows, columns] = this.worldSize;
         const map = [];
 

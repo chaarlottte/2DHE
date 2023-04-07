@@ -24,6 +24,14 @@ class UtilitiesClass {
         player.angle = playerData.angle;
     }
 
+    getChunk(x, y, world) {
+        const chunkX = Math.floor(x / world.worldgen.tileSize);
+        const chunkY = Math.floor(y / world.worldgen.tileSize);
+    
+        const chunk = world.map[chunkY + world.worldgen.worldSize[1] - 1][chunkX + world.worldgen.worldSize[0] - 1];
+        return chunk;
+    }
+
 }
 
 if (typeof module !== "undefined" && module.exports) {
