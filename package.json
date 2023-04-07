@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^2.0.22",
+    "socket.io": "^4.6.1"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "name": "game.",
+  "version": "1.0.0",
+  "description": "game.",
+  "main": "server.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chaarlottte/game..git"
+  },
+  "keywords": [
+    "game."
+  ],
+  "author": "chaarlottte",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chaarlottte/game./issues"
+  },
+  "homepage": "https://github.com/chaarlottte/game.#readme"
+}
