@@ -3,6 +3,9 @@ class Player {
         this.x = x;
         this.y = y;
 
+        this.nextPosX = x;
+        this.nextPosY = y;
+
         this.angle = 0;
         this.id = id;
         this.name = id;
@@ -10,11 +13,21 @@ class Player {
         this.speed = 4;
 
         this.size = 20;
-        this.shape = "triangle"; // triangle, circle, square, cat
+        this.shape = "square"; // triangle, circle, square, cat
         this.color = "red";
 
         this.health = 100;
         this.maxHealth = 100;
+
+        this.lastPing = Date.now();
+
+        // this.socket = socket;
+
+        this.lastHit = "";
+
+        this.kills = 0;
+
+        this.acFlags = 0;
     }
 }
 

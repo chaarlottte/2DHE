@@ -165,4 +165,11 @@ class Controller {
         let angle = Math.atan2(rotY, rotX);
         this.localPlayer.angle = angle;
     };
+
+    clickListener = (e) => {
+        const rect = this.canvas.getBoundingClientRect();
+        let rotX = e.clientX - rect.left - this.canvas.width / 2;
+        let rotY = e.clientY - rect.top - this.canvas.height / 2;
+        this.socket.emit("playerShoot", { rotX: rotX, rotY: rotY });
+    };
 }

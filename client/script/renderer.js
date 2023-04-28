@@ -43,9 +43,17 @@ class Renderer {
             }
         }
 
+        for(const projectile of Object.values(this.game.world.projectiles)) {
+            // if (utils.isGameObjectVisible(projectile, this.game.localPlayer, this.canvas.width, this.canvas.height)) {
+            if(!projectile.used)
+                this.renderProjectile(projectile);
+            //}
+        }
+
         this.ctx.restore();
 
         this.renderHUD();
+        this.renderLeaderboard();
     }
 
     drawVisisbleChunks() {
@@ -90,9 +98,43 @@ class Renderer {
         this.ctx.font = '16px Arial';
         this.ctx.fillText(`FPS: ${this.fps.toFixed(1)}`, 5, 20);
         this.ctx.fillText(`POS: (${this.game.localPlayer.x}, ${this.game.localPlayer.y})`, 5, 35);
+
         this.ctx.restore();
     }
 
+    renderLeaderboard() {
+        let playerArray = Object.values(this.game.world.players);
+
+        // alert(JSON.stringify(this.game.world.leaderboard))
+
+        playerArray.sort(function(a, b) {
+            return a.kills - b.kills
+        }).reverse();
+
+        // alert(JSON.stringify(playerArray));
+        
+        let leaderboardSize = (playerArray.length * 25);
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(
+            0,
+            50,
+            150,
+            leaderboardSize
+        );
+
+        this.ctx.fillStyle = 'black';
+        this.ctx.font = '16px Arial';
+
+        this.ctx.save();
+        let index = 0;
+        playerArray.forEach((player) => {
+            let kills = player.kills;
+            this.ctx.fillText(`${index + 1}.) ${player.name} - ${kills} kills`, 5, 60 + (index * 25));
+            index++;
+        });
+        this.ctx.restore();
+    }
+    
     // old drawPlayer
     /*drawPlayer(player) {
         this.ctx.save();
@@ -133,7 +175,7 @@ class Renderer {
                 this.drawHands(radius);
                 break;
             case "cat":
-                let cSize = 100;
+                let cSize = player.size * 3;
                 this.ctx.rotate(-Math.PI / 2);
                 this.ctx.drawImage(this.catImage, -cSize / 2, -cSize / 2, cSize, cSize);
                 break;
@@ -231,7 +273,14 @@ class Renderer {
         }
         // Add more shape types if needed
     }
-      
+
+    renderProjectile(projectile) {
+        this.ctx.fillStyle = "rgb(0, 255, 255)";
+        this.ctx.beginPath();
+        this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
 
     drawChunk(chunk) {
         this.ctx.fillStyle = chunk.color;

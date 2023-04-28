@@ -1,8 +1,12 @@
 {
   "dependencies": {
     "express": "^4.18.2",
+    "javascript-obfuscator": "^4.0.2",
+    "js-beautify": "^1.14.7",
+    "lerp": "^1.0.3",
     "nodemon": "^2.0.22",
-    "socket.io": "^4.6.1"
+    "socket.io": "^4.6.1",
+    "uglify-js": "^3.17.4"
   },
   "scripts": {
     "start": "node server.js"
@@ -11,7 +15,6 @@
   "version": "1.0.0",
   "description": "game.",
   "main": "server.js",
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chaarlottte/game..git"

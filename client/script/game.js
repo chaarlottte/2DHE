@@ -17,7 +17,16 @@ class Game {
     }
 
     connect() {
+        let username = "test";
+        let shape = "triangle";
+
+        username = window.prompt("Username: ", "");
+        shape = window.prompt("Shape: ", "square, triangle, circle, cat");
+        while(!["triangle", "square", "circle", "cat"].includes(shape)) {
+            shape = window.prompt("Shape: ", "square, triangle, circle, cat");
+        }
         this.socket = io();
+        this.socket.emit("setUserData", { username: username, shape: shape })
         this.socket.on("initialize", (data) => {
 
             console.log("Fetching world");
@@ -53,13 +62,44 @@ class Game {
         this.socket.on("playerJoined", (newPlayer) => {
             this.world.players[newPlayer.id] = newPlayer;
         });
+
+        this.socket.on("kicked", (data) => {
+            alert(`Kicked: ${data.reason}`);
+            this.socket.disconnect();
+        });
+
+        this.socket.on("worldUpdate", (data) => {
+            // alert(JSON.stringify(data.gameObjects));
+            this.world.gameObjects = data.gameObjects;
+            this.world.projectiles = data.projectiles;
+
+            // sync with local player data
+            data.players[this.localPlayer.id].x = this.localPlayer.x;
+            data.players[this.localPlayer.id].y = this.localPlayer.y;
+            
+            // data.players[this.localPlayer.id] = this.localPlayer;
+            
+            this.world.players = data.players;
+
+            /*for(let player of data.players) {
+                if(player.id != this.localPlayer.id) {
+                    this.world.players[player.id] = player;
+                }
+            }*/
+        });
     
         this.socket.on("playerDisconnected", (playerId) => { delete this.world.players[playerId]; });
+
+        setInterval(() => {
+            this.socket.emit("keepAlive");
+            // console.log("Broadcasted keepalive");
+        }, 5000)
     }
 
     initializePageEvents() {
         document.addEventListener("keydown", this.controller.keyDownHandler);
         document.addEventListener("keyup", this.controller.keyUpHandler);
         this.canvas.addEventListener("mousemove", this.controller.mouseMoveHandler);
+        this.canvas.addEventListener("click", this.controller.clickListener);
     }
 }

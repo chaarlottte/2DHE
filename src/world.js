@@ -1,4 +1,5 @@
-const { GameObject, BoundingBox } = require("./gameobject")
+const { GameObject, BoundingBox } = require("./gameobject");
+const { Leaderboard } = require("./leaderboard");
 
 /*function createHouse(baseX, baseY, houseWidth, houseHeight, wallThickness, doorWidth, doorHeight, rotation, world) {
     const leftWall = new BoundingBox(0, 0, wallThickness, houseHeight);
@@ -97,6 +98,23 @@ function createHouseJSON(x, y, houseWidth, houseHeight, wallThickness, doorWidth
 
     return houseJSON;
 }
+
+class Projectile {
+    constructor(x, y, rots, shooterId) {
+        this.x = x;
+        this.y = y;
+        this.rots = rots;
+
+        this.speed = 15;
+        this.size = 10;
+
+        this.angle = Math.atan2(this.rots.rotY, this.rots.rotX);
+
+        this.shooterId = shooterId;
+
+        this.used = false;
+    }
+}
   
 class World {
     constructor(worldgen) {
@@ -105,6 +123,10 @@ class World {
         this.players = { };
         this.gameObjects = [ ];
 
+        this.projectiles = [ ];
+
+        this.leaderboard = new Leaderboard(this.players);
+        
         let houseWidth = 300, houseHeight = 200, wallThickness = 20;
 
         const houseWalls = createHouseJSON(200, 200, houseWidth, houseHeight, wallThickness, 80, "top");
@@ -118,6 +140,56 @@ class World {
 
         const houseWalls4 = createHouseJSON(200, 1050, houseWidth, houseHeight, wallThickness, 80, "bottom");
         this.gameObjects.push(...houseWalls4);
+    }
+
+    update = () => {
+        this.projectiles.forEach(projectile => {
+            projectile.x += projectile.speed * Math.cos(projectile.angle);
+            projectile.y += projectile.speed * Math.sin(projectile.angle);
+        });
+
+        Object.values(this.players).forEach(player => {
+            const playerBox = {
+                x: player.x - player.size,
+                y: player.y - player.size,
+                w: player.size * 2,
+                h: player.size * 2,
+            };
+    
+            for (const obj of this.projectiles) {
+                if(obj.used)
+                    continue
+                
+                const objBox = {
+                    x: obj.x,
+                    y: obj.y,
+                    w: obj.size,
+                    h: obj.size
+                };
+    
+                if (playerBox.x < objBox.x + objBox.w &&
+                    playerBox.x + playerBox.w > objBox.x &&
+                    playerBox.y < objBox.y + objBox.h &&
+                    playerBox.y + playerBox.h > objBox.y) {
+                    if(player.id != obj.shooterId) {
+                        player.health -= 10;
+                        obj.used = true;
+                        player.lastHit = obj.shooterId;
+                    }
+                }
+            }
+
+            this.leaderboard.createPlayerData(player.id);
+        });
+    }
+
+    getWorldData = () => {
+        return {
+            gameObjects: this.gameObjects,
+            projectiles: this.projectiles,
+            players: this.players,
+            leaderboard: this.leaderboard,
+        };
     }
 }
 
@@ -133,4 +205,5 @@ class Chunk {
 if (typeof module !== "undefined" && module.exports) {
     module.exports.World = World;
     module.exports.Chunk = Chunk;
+    module.exports.Projectile = Projectile;
 }
