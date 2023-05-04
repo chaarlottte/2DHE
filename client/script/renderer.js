@@ -277,9 +277,9 @@ class Renderer {
     }
 
     renderProjectile(projectile) {
-        this.ctx.fillStyle = "rgb(0, 255, 255)";
+        this.ctx.fillStyle = projectile.color;
         this.ctx.beginPath();
-        this.ctx.shadowColor = "rgb(0, 128, 128)";
+        this.ctx.shadowColor = projectile.color;
         this.ctx.shadowBlur = 100;
         // this.ctx.shadowOffsetX = 10;
         // this.ctx.shadowOffsetY = 10;

@@ -113,6 +113,10 @@ class Projectile {
         this.shooterId = shooterId;
 
         this.used = false;
+        this.time = Date.now();
+        this.maxAliveTime = 1000;
+        this.distanceTraveled = 0;
+        this.range = 5000;
     }
 }
   
@@ -144,8 +148,11 @@ class World {
 
     update = () => {
         this.projectiles.forEach(projectile => {
+            let oldX = projectile.x;
+            let oldY = projectile.y;
             projectile.x += projectile.speed * Math.cos(projectile.angle);
             projectile.y += projectile.speed * Math.sin(projectile.angle);
+            projectile.distanceTraveled += Math.sqrt(Math.pow(projectile.x - oldX, 2) + Math.pow(projectile.y - oldY, 2));
         });
 
         Object.values(this.players).forEach(player => {
@@ -166,6 +173,12 @@ class World {
                     w: obj.size,
                     h: obj.size
                 };
+
+                if(Date.now() - obj.time > obj.maxAliveTime ||
+                    obj.distanceTraveled >= obj.range) {
+                    obj.used = true;
+                    continue;
+                }
     
                 if (playerBox.x < objBox.x + objBox.w &&
                     playerBox.x + playerBox.w > objBox.x &&

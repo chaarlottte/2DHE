@@ -116,7 +116,11 @@ io.on("connection", (socket) => {
 
     socket.on("playerShoot", (data) => {
         if (!initialized) return;
-        world.projectiles.push(new Projectile(world.players[socket.id].x, world.players[socket.id].y, { rotX: data.rotX, rotY: data.rotY }, socket.id));
+        for(let i = 0; i < 5; i++) {
+            let p = new Projectile(world.players[socket.id].x, world.players[socket.id].y, { rotX: data.rotX + Math.random() * 50, rotY: data.rotY + Math.random() * 50 }, socket.id);
+            p.color = world.players[socket.id].color;
+            world.projectiles.push(p);
+        }
     });
     
     socket.on("disconnect", () => {
