@@ -20,8 +20,8 @@ class Game {
         let username = "test";
         let shape = "triangle";
 
-        username = window.prompt("Username: ", "");
-        shape = window.prompt("Shape: ", "square, triangle, circle, cat");
+        // username = window.prompt("Username: ", "");
+        // shape = window.prompt("Shape: ", "square, triangle, circle, cat");
         while(!["triangle", "square", "circle", "cat"].includes(shape)) {
             shape = window.prompt("Shape: ", "square, triangle, circle, cat");
         }
@@ -74,8 +74,9 @@ class Game {
             this.world.projectiles = data.projectiles;
 
             // sync with local player data
-            data.players[this.localPlayer.id].x = this.localPlayer.x;
-            data.players[this.localPlayer.id].y = this.localPlayer.y;
+            this.localPlayer.x = data.players[this.localPlayer.id].x;
+            this.localPlayer.y = data.players[this.localPlayer.id].y;
+            this.localPlayer.angle = data.players[this.localPlayer.id].angle;
             
             // data.players[this.localPlayer.id] = this.localPlayer;
             
@@ -100,6 +101,7 @@ class Game {
         document.addEventListener("keydown", this.controller.keyDownHandler);
         document.addEventListener("keyup", this.controller.keyUpHandler);
         this.canvas.addEventListener("mousemove", this.controller.mouseMoveHandler);
-        this.canvas.addEventListener("click", this.controller.clickListener);
+        this.canvas.addEventListener("mousedown", this.controller.mouseDownListener);
+        this.canvas.addEventListener("mouseup", this.controller.mouseUpListener);
     }
 }

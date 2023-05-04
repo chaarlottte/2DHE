@@ -43,12 +43,14 @@ class Renderer {
             }
         }
 
-        for(const projectile of Object.values(this.game.world.projectiles)) {
+        /*for(const projectile of Object.values(this.game.world.projectiles)) {
             // if (utils.isGameObjectVisible(projectile, this.game.localPlayer, this.canvas.width, this.canvas.height)) {
             if(!projectile.used)
                 this.renderProjectile(projectile);
             //}
-        }
+        }*/
+
+        this.drawVisisbleProjectiles();
         
         this.ctx.restore();
 
@@ -79,6 +81,27 @@ class Renderer {
         });
     }
 
+    drawVisisbleProjectiles() {
+        const visibleXMin = this.game.localPlayer.x - this.canvas.width / 2;
+        const visibleXMax = this.game.localPlayer.x + this.canvas.width / 2;
+        const visibleYMin = this.game.localPlayer.y - this.canvas.height / 2;
+        const visibleYMax = this.game.localPlayer.y + this.canvas.height / 2;
+
+        Object.values(this.game.world.projectiles).forEach((projectile) => {
+            const chunkX = projectile.x;
+            const chunkY = projectile.y;
+
+            if (
+                chunkX + projectile.size >= visibleXMin &&
+                chunkX - projectile.size <= visibleXMax &&
+                chunkY + projectile.size >= visibleYMin &&
+                chunkY - projectile.size <= visibleYMax
+            ) {
+                this.renderProjectile(projectile);
+            }
+        });
+    }
+    
     renderHUD() {
         this.ctx.fillStyle = "white";
         this.ctx.fillRect(
@@ -195,7 +218,7 @@ class Renderer {
     drawNametag(player) {
         this.ctx.save();
         this.ctx.font = "14px Arial";
-        this.ctx.fillStyle = "black";
+        this.ctx.fillStyle = "white";
         this.ctx.textAlign = "center";
         this.ctx.fillText(player.name, 0, -player.size - 15);
         this.ctx.restore();
@@ -212,9 +235,14 @@ class Renderer {
         this.ctx.fillRect(-healthWidth / 2, player.size + 15, healthWidth, healthHeight);
     
         // Draw the current health
+        this.ctx.fillRect(-healthWidth / 2 + 1, player.size + 16, healthWidth - 2, healthHeight - 2);
         const currentHealthWidth = (player.health / player.maxHealth) * healthWidth;
-        this.ctx.fillStyle = "green";
+        this.ctx.fillStyle = "rgb(0, 255, 0)";
+        this.ctx.shadowColor = "rgb(0, 128, 0)";
+        this.ctx.shadowBlur = 100;
         this.ctx.fillRect(-healthWidth / 2 + 1, player.size + 16, currentHealthWidth - 2, healthHeight - 2);
+
+        this.resetShadow();
     
         this.ctx.restore();
     }    
@@ -286,6 +314,10 @@ class Renderer {
         this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
         this.ctx.closePath();
         this.ctx.fill();
+        this.resetShadow();
+    }
+
+    resetShadow() {
         this.ctx.shadowColor = "transparent";
         this.ctx.shadowOffsetX = 0;
         this.ctx.shadowOffsetY = 0;

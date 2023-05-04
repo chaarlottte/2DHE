@@ -1,3 +1,5 @@
+const { Pistol, Rifle, Shotgun, BurstRifle } = require("./weapons");
+
 class Player {
     constructor(x, y, id) {
         this.x = x;
@@ -28,6 +30,8 @@ class Player {
         this.kills = 0;
 
         this.acFlags = 0;
+
+        this.weapon = new BurstRifle();
     }
 }
 

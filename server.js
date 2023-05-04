@@ -4,10 +4,11 @@ const socketIO = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
-const { World, Projectile } = require("./src/world")
-const { WorldGeneration } = require("./src/worldgen")
-const { Player } = require("./src/player")
-const { UtilitiesClass } = require("./src/utils")
+const { World, Projectile } = require("./src/world");
+const { WorldGeneration } = require("./src/worldgen");
+const { Pistol, Rifle, Shotgun } = require("./src/weapons");
+const { Player } = require("./src/player");
+const { UtilitiesClass } = require("./src/utils");
 const JavaScriptObfuscator = require("javascript-obfuscator");
 const uglifyJS = require("uglify-js");
 const fs = require("fs");
@@ -86,12 +87,12 @@ io.on("connection", (socket) => {
         world.players[socket.id].lastPing = Date.now();
     });
 
-    socket.on("playerMove", (playerData) => {
+    socket.on("playerInput", (data) => {
         if (!initialized) return;
         const player = world.players[socket.id];
         if (!player) return;
       
-        let newX = playerData.x;
+        /*let newX = playerData.x;
         let newY = playerData.y;
         // compare distance between the two positions, if greater than 5, then return
 
@@ -107,11 +108,51 @@ io.on("connection", (socket) => {
         }
         player.x = newX;
         player.y = newY;
-        player.angle = playerData.angle;
+        player.angle = playerData.angle;*/
+        let speed = player.speed;
+        if (data.controls.sprint)
+            speed += 2;
+    
+        const prevX = player.x;
+        const prevY = player.y;
+    
+        const newX = player.x + (data.controls.right - data.controls.left) * speed;
+        const newY = player.y + (data.controls.down - data.controls.up) * speed;
+    
+        const mapWidth = world.map[0].length * world.worldgen.tileSize;
+        const mapHeight = world.map.length * world.worldgen.tileSize;
+    
+        const leftBound = -mapWidth / 2;
+        const rightBound = mapWidth / 2;
+        const topBound = mapHeight / 2;
+        const bottomBound = -mapHeight / 2;
+    
+        if (newX >= leftBound && newX <= rightBound) {
+            player.x = newX;
+            if (world.checkCollision(player, Object.values(world.gameObjects))) {
+                player.x = prevX;
+            }
+        }
+    
+        if (newY >= bottomBound && newY <= topBound) {
+            player.y = newY;
+            if (world.checkCollision(player, Object.values(world.gameObjects))) {
+                player.y = prevY;
+            }
+        }
+        
+        player.angle = data.rots.angle;
+
+        if(data.controls.mouse) {
+            player.weapon.shoot(world, data.rots, socket.id, player);
+        } else {
+            player.weapon.alreadyShot = false;
+        }
+        
+        // console.log(data);
 
         // console.log(playerData)
-      
-        socket.broadcast.emit("playerMoved", { playerId: socket.id, x: player.x, y: player.y, angle: player.angle });
+        socket.broadcast.emit("playerMoved", { playerId: socket.id, x: player.x, y: player.y, angle: data.angle });
     });
 
     socket.on("playerShoot", (data) => {

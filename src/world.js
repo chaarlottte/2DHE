@@ -155,6 +155,7 @@ class World {
             projectile.distanceTraveled += Math.sqrt(Math.pow(projectile.x - oldX, 2) + Math.pow(projectile.y - oldY, 2));
         });
 
+
         Object.values(this.players).forEach(player => {
             const playerBox = {
                 x: player.x - player.size,
@@ -162,9 +163,11 @@ class World {
                 w: player.size * 2,
                 h: player.size * 2,
             };
-    
+
+            
+            this.projectiles = this.projectiles.filter(p => !p.used)
             for (const obj of this.projectiles) {
-                if(obj.used)
+                if(obj.used) 
                     continue
                 
                 const objBox = {
@@ -194,6 +197,35 @@ class World {
 
             this.leaderboard.createPlayerData(player.id);
         });
+    }
+
+    checkCollision(player, gameObjects) {
+        const playerBox = {
+            x: player.x - player.size,
+            y: player.y - player.size,
+            w: player.size * 2,
+            h: player.size * 2,
+        };
+
+        for (const obj of gameObjects) {
+            const objBox = {
+                x: obj.x + obj.boundingBox.x,
+                y: obj.y + obj.boundingBox.y,
+                w: obj.boundingBox.w,
+                h: obj.boundingBox.h,
+            };
+
+            if (
+                playerBox.x < objBox.x + objBox.w &&
+                playerBox.x + playerBox.w > objBox.x &&
+                playerBox.y < objBox.y + objBox.h &&
+                playerBox.y + playerBox.h > objBox.y
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     getWorldData = () => {
