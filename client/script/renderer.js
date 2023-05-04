@@ -49,7 +49,7 @@ class Renderer {
                 this.renderProjectile(projectile);
             //}
         }
-
+        
         this.ctx.restore();
 
         this.renderHUD();
@@ -150,7 +150,8 @@ class Renderer {
         this.ctx.translate(player.x, player.y);
         this.ctx.rotate(player.angle);
         this.ctx.fillStyle = player.color;
-        
+        this.ctx.shadowColor = player.color;
+        this.ctx.shadowBlur = 25;
         switch(player.shape) {
             case "triangle":
                 this.ctx.rotate(Math.PI / 2);
@@ -180,9 +181,10 @@ class Renderer {
                 this.ctx.drawImage(this.catImage, -cSize / 2, -cSize / 2, cSize, cSize);
                 break;
         }
-        
-        this.ctx.restore();
 
+        this.ctx.shadowColor = "transparent";
+        this.ctx.shadowBlur = 0;
+        this.ctx.restore();
         this.ctx.save();
         this.ctx.translate(player.x, player.y);
         this.drawNametag(player);
@@ -277,13 +279,22 @@ class Renderer {
     renderProjectile(projectile) {
         this.ctx.fillStyle = "rgb(0, 255, 255)";
         this.ctx.beginPath();
+        this.ctx.shadowColor = "rgb(0, 128, 128)";
+        this.ctx.shadowBlur = 100;
+        // this.ctx.shadowOffsetX = 10;
+        // this.ctx.shadowOffsetY = 10;
         this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
         this.ctx.closePath();
         this.ctx.fill();
+        this.ctx.shadowColor = "transparent";
+        this.ctx.shadowOffsetX = 0;
+        this.ctx.shadowOffsetY = 0;
+        this.ctx.shadowBlur = 0;
     }
 
     drawChunk(chunk) {
-        this.ctx.fillStyle = chunk.color;
+        // this.ctx.fillStyle = chunk.color;
+        this.ctx.fillStyle = "black";
         this.ctx.fillRect(
             chunk.x * chunk.size - chunk.size / 2,
             chunk.y * chunk.size - chunk.size / 2,

@@ -106,7 +106,7 @@ class Projectile {
         this.rots = rots;
 
         this.speed = 15;
-        this.size = 10;
+        this.size = 15;
 
         this.angle = Math.atan2(this.rots.rotY, this.rots.rotX);
 
