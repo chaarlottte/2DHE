@@ -4,11 +4,15 @@ const game = new Game(canvas, ctx);
 
 function gameLoop() {
     if(game) {
-        if(game.controller)
-            game.controller.doMovement();
         if(game.renderer)
             game.renderer.renderLoop();
     }
+}
+
+function inputLoop() {
+    if(game)
+        if(game.controller)
+            game.controller.doMovement();
 }
 
 function startGame() {
@@ -17,11 +21,8 @@ function startGame() {
 
     game.connect();
 
-    setInterval(gameLoop, 1000 / 60);
-}
-
-function initialize() {
-    // document.getElementById("canvas").width
+    setInterval(gameLoop, 1000 / 120);
+    setInterval(inputLoop, 1000 / 30);
 }
 
 startGame();

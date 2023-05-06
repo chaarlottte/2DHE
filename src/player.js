@@ -7,12 +7,15 @@ class Player {
 
         this.nextPosX = x;
         this.nextPosY = y;
+        this.prevX = x;
+        this.prevY = y;
 
         this.angle = 0;
         this.id = id;
         this.name = id;
 
-        this.speed = 4;
+        this.speed = 250;
+        this.sprintModifier = 1.5;
 
         this.size = 20;
         this.shape = "square"; // triangle, circle, square, cat
@@ -25,7 +28,7 @@ class Player {
 
         // this.socket = socket;
 
-        this.lastHit = "";
+        this.lastAttacker = "";
 
         this.kills = 0;
 
@@ -35,7 +38,12 @@ class Player {
 
         this.isNew = true;
         this.isRemoved = false;
-        this.hasMoved = false;
+        this.hasMovedThisTick = false;
+    }
+
+    damage = (damage) => {
+        this.health -= damage;
+        this.hasTakenDamageThisTick = true;
     }
 }
 

@@ -11,6 +11,7 @@ class Renderer {
 
         this.catImage = new Image();
         this.catImage.src = "https://static-00.iconduck.com/assets.00/cat-face-emoji-512x455-gda5rvrc.png";
+        this.interpolationProgress = 0;
     }
 
     renderLoop() {
@@ -38,17 +39,10 @@ class Renderer {
         }*/
 
         for(const obj of Object.values(this.game.world.gameObjects)) {
-            if (utils.isGameObjectVisible(obj, this.game.localPlayer, this.canvas.width, this.canvas.height)) {
+            if (ClientUtils.isGameObjectVisible(obj, this.game.localPlayer, this.canvas.width, this.canvas.height)) {
                 this.renderGameObject(obj);
             }
         }
-
-        /*for(const projectile of Object.values(this.game.world.projectiles)) {
-            // if (utils.isGameObjectVisible(projectile, this.game.localPlayer, this.canvas.width, this.canvas.height)) {
-            if(!projectile.used)
-                this.renderProjectile(projectile);
-            //}
-        }*/
 
         this.drawVisisbleProjectiles();
         
@@ -88,8 +82,9 @@ class Renderer {
         const visibleYMax = this.game.localPlayer.y + this.canvas.height / 2;
 
         Object.values(this.game.world.projectiles).forEach((projectile) => {
-            const chunkX = projectile.x;
-            const chunkY = projectile.y;
+            const interpolateProjectile = ClientUtils.interpolateProjectile(projectile);
+            const chunkX = interpolateProjectile.x;
+            const chunkY = interpolateProjectile.y;
 
             if (
                 chunkX + projectile.size >= visibleXMin &&
@@ -97,7 +92,7 @@ class Renderer {
                 chunkY + projectile.size >= visibleYMin &&
                 chunkY - projectile.size <= visibleYMax
             ) {
-                this.renderProjectile(projectile);
+                this.renderProjectile(projectile, interpolateProjectile);
             }
         });
     }
@@ -170,7 +165,9 @@ class Renderer {
 
     drawPlayer(player) {
         this.ctx.save();
-        this.ctx.translate(player.x, player.y);
+        const interpX = player.prevX + (player.x - player.prevX);
+        const interpY = player.prevY + (player.y - player.prevY);
+        this.ctx.translate(interpX, interpY);
         this.ctx.rotate(player.angle);
         this.ctx.fillStyle = player.color;
         this.ctx.shadowColor = player.color;
@@ -304,7 +301,7 @@ class Renderer {
         // Add more shape types if needed
     }
 
-    renderProjectile(projectile) {
+    renderProjectile(projectile, interpolateProjectile) {
         this.ctx.fillStyle = projectile.color;
         switch(projectile.type) {
             case "normal":
@@ -313,7 +310,7 @@ class Renderer {
                 this.ctx.shadowBlur = 100;
                 // this.ctx.shadowOffsetX = 10;
                 // this.ctx.shadowOffsetY = 10;
-                this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
+                this.ctx.arc(interpolateProjectile.x, interpolateProjectile.y, projectile.size / 2, 0, Math.PI * 2);
                 this.ctx.closePath();
                 this.ctx.fill();
                 break;
@@ -334,7 +331,7 @@ class Renderer {
                 // Render the rocket
                 this.ctx.fillStyle = projectile.color;
                 this.ctx.save(); // Save the current transformation matrix
-                this.ctx.translate(projectile.x, projectile.y);
+                this.ctx.translate(interpolateProjectile.x, interpolateProjectile.y);
                 this.ctx.rotate(projectile.angle);
                 this.ctx.rotate(Math.PI / 2);
                 this.ctx.beginPath();
@@ -356,8 +353,8 @@ class Renderer {
         this.ctx.shadowBlur = 0;
     }
 
-    renderParticleSystem(system) {
-        for (const particle of system.particles) {
+    renderParticleSystem(particles) {
+        for (const particle of particles) {
             this.renderParticle(particle);
         }
     }
@@ -373,6 +370,13 @@ class Renderer {
 
     drawChunk(chunk) {
         // this.ctx.fillStyle = chunk.color;
+        this.ctx.strokeStyle = "rgb(100, 100, 100)";
+        this.ctx.strokeRect(
+            chunk.x * chunk.size - chunk.size / 2,
+            chunk.y * chunk.size - chunk.size / 2,
+            chunk.size,
+            chunk.size
+        )
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(
             chunk.x * chunk.size - chunk.size / 2,

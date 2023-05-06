@@ -1,7 +1,3 @@
-hiiii = () => {
-    console.log("hiiii")
-}
-
 class Game {
     constructor(canvas, ctx) {
         this.canvas = canvas;
@@ -9,11 +5,7 @@ class Game {
 
         this.controller = null;
         this.renderer = null;
-    }
-
-    gameLoop() {
-        this.controller.doMovement();
-        this.renderer.renderLoop();
+        this.connected = false;
     }
 
     connect() {
@@ -28,6 +20,7 @@ class Game {
         this.socket = io();
         this.socket.emit("setUserData", { username: username, shape: shape })
         this.socket.on("initialize", (data) => {
+            this.connected = true;
 
             console.log("Fetching world");
             this.world = data.world;
@@ -53,44 +46,14 @@ class Game {
     }
 
     initializeNetworkEvents() {
-        /*this.socket.on("playerMoved", ({ playerId, x, y, angle }) => {
-            this.world.players[playerId].x = x;
-            this.world.players[playerId].y = y;
-            this.world.players[playerId].angle = angle;
-        });*/
-
-        this.socket.on("playerMoves", (players) => {
-            for(p in players) {
-                let playerId = p.id;
-                this.world.players[playerId].x = x;
-                this.world.players[playerId].y = y;
-                this.world.players[playerId].angle = angle;
-            }
-        });
-
-        this.socket.on("playerJoined", (newPlayer) => {
+        /*this.socket.on("playerJoined", (newPlayer) => {
             this.world.players[newPlayer.id] = newPlayer;
-        });
+        });*/
 
         this.socket.on("kicked", (data) => {
             alert(`Kicked: ${data.reason}`);
             this.socket.disconnect();
         });
-
-        /*this.socket.on("worldUpdate", (data) => {
-            // alert(JSON.stringify(data.gameObjects));
-            this.world.gameObjects = data.gameObjects;
-            this.world.projectiles = data.projectiles;
-
-            // sync with local player data
-            this.localPlayer.x = data.players[this.localPlayer.id].x;
-            this.localPlayer.y = data.players[this.localPlayer.id].y;
-            this.localPlayer.angle = data.players[this.localPlayer.id].angle;
-            
-            // data.players[this.localPlayer.id] = this.localPlayer;
-            
-            this.world.players = data.players;
-        });*/
 
         this.socket.on("worldUpdate", (deltaUpdates) => {
             // Apply new players
@@ -106,64 +69,62 @@ class Game {
                     delete this.world.players[removedPlayerId];
                 }
             });
-        
-            // Apply player moves
-            Object.entries(deltaUpdates.playerMoves).forEach(([id, playerMove]) => {
-                if (id === this.localPlayer.id) {
-                    this.localPlayer.x = playerMove.x;
-                    this.localPlayer.y = playerMove.y;
-                    this.localPlayer.angle = playerMove.angle;
-                } else {
-                    const player = this.world.players[id];
-                    if (player) {
-                        player.x = playerMove.x;
-                        player.y = playerMove.y;
-                        player.angle = playerMove.angle;
-                    }
-                }
+
+            Object.entries(deltaUpdates.playerUpdates).forEach(([id, updates]) => {
+                this.world.players[id].x = updates.x;
+                this.world.players[id].y = updates.y;
+                this.world.players[id].prevX = updates.prevX;
+                this.world.players[id].prevY = updates.prevY;
+                this.world.players[id].angle = updates.angle;
+                this.world.players[id].health = updates.health;
             });
-        
+
             // Add new projectiles
             deltaUpdates.newProjectiles.forEach((newProjectile) => {
+                newProjectile.velocityX = newProjectile.speed * Math.cos(newProjectile.angle);
+                newProjectile.velocityY = newProjectile.speed * Math.sin(newProjectile.angle);
+                newProjectile.lastUpdateTime = Date.now();
                 this.world.projectiles.push(newProjectile);
             });
-        
-            // Remove projectiles that have been removed
-            deltaUpdates.removedProjectiles.forEach((removedProjectileId) => {
-                this.world.projectiles = this.world.projectiles.filter(projectile => projectile.id !== removedProjectileId);
-            });
 
-            /*deltaUpdates.updatedProjectiles.forEach((updatedProjectile) => {
+            deltaUpdates.updatedProjectiles.forEach((updatedProjectile) => {
                 const existingProjectile = this.world.projectiles.find(projectile => projectile.id === updatedProjectile.id);
-                if (existingProjectile) {
+                const notRemovedProjectile = deltaUpdates.removedProjectiles.find(projectile => projectile.id === updatedProjectile.id);
+                
+                if (existingProjectile && !notRemovedProjectile) {
                     existingProjectile.x = updatedProjectile.x;
                     existingProjectile.y = updatedProjectile.y;
                     existingProjectile.angle = updatedProjectile.angle;
-                }
-            });*/
-
-            deltaUpdates.projectiles.forEach((updatedProjectile) => {
-                const existingProjectile = this.world.projectiles.find(projectile => projectile.id === updatedProjectile.id);
-                if (existingProjectile) {
-                    existingProjectile.x = updatedProjectile.x;
-                    existingProjectile.y = updatedProjectile.y;
-                    existingProjectile.angle = updatedProjectile.angle;
+                    existingProjectile.vx = updatedProjectile.speed * Math.cos(updatedProjectile.angle);
+                    existingProjectile.vy = updatedProjectile.speed * Math.sin(updatedProjectile.angle);
+                    existingProjectile.lastUpdateTime = Date.now();
         
                     // If the projectile is a rocket, update its particle systems
                     if (updatedProjectile.type === "rocket" && updatedProjectile.particleData) {
-                        existingProjectile.fireParticles.setParticles(updatedProjectile.particleData.fireParticles);
-                        existingProjectile.smokeParticles.setParticles(updatedProjectile.particleData.smokeParticles);
+                        existingProjectile.fireParticles = updatedProjectile.particleData.fireParticles;
+                        existingProjectile.smokeParticles = updatedProjectile.particleData.smokeParticles;
                     }
                 }
             });
-        
-            // Update game objects (if applicable)
-            // Note: This part is not included in the delta updates example, but you can extend the delta updates to handle game objects as well.
-            // this.world.gameObjects = data.gameObjects;
+
+            let toBeRemoved = [];
+            // Remove projectiles that have been removed
+            deltaUpdates.removedProjectiles.forEach((removedProjectileId) => {
+                // this.world.projectiles = this.world.projectiles.filter(projectile => projectile.id !== removedProjectileId);
+                let index = 0;
+                this.world.projectiles.forEach((projectile) => {
+                    toBeRemoved.push(index);
+                    index++;
+                });
+            })
+
+            for(let i in toBeRemoved) {
+                delete this.world.projectiles[i];
+            }
         });
         
     
-        this.socket.on("playerDisconnected", (playerId) => { delete this.world.players[playerId]; });
+        // this.socket.on("playerDisconnected", (playerId) => { delete this.world.players[playerId]; });
 
         setInterval(() => {
             this.socket.emit("keepAlive");

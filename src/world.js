@@ -107,43 +107,96 @@ class World {
         this.gameObjects = [ ];
 
         this.projectiles = [ ];
-        this.pendingPlayerMoves = [];
+        this.pendingPlayerMoves = {};
 
         this.leaderboard = new Leaderboard(this.players);
         
         this.deltaUpdates = {
             newPlayers: {},
             removedPlayers: [],
-            playerMoves: {},
+            playerUpdates: {},
             newProjectiles: [],
             removedProjectiles: [],
             updatedProjectiles: []
         };
     }
 
-    update = () => {
+    update = (io) => {
         this.deltaUpdates.newPlayers = {};
         this.deltaUpdates.removedPlayers = [];
-        this.deltaUpdates.playerMoves = {};
+        this.deltaUpdates.playerUpdates = {};
         this.deltaUpdates.newProjectiles = [];
         this.deltaUpdates.removedProjectiles = [];
         this.deltaUpdates.updatedProjectiles = [];
 
         this.projectiles.forEach(projectile => {
-            let oldX = projectile.x;
-            let oldY = projectile.y;
-            projectile.x += projectile.speed * Math.cos(projectile.angle);
-            projectile.y += projectile.speed * Math.sin(projectile.angle);
-            projectile.distanceTraveled += Math.sqrt(Math.pow(projectile.x - oldX, 2) + Math.pow(projectile.y - oldY, 2));
-            projectile.hasMoved = true;
-            projectile.update();
-            if (projectile.type === "rocket") {
-                projectile.particleData = projectile.getParticleData();
+            if (projectile.used) {
+                this.deltaUpdates.removedProjectiles.push(projectile.id);
+            } else {
+                if (projectile.isNew) {
+                    this.deltaUpdates.newProjectiles.push(projectile);
+                    projectile.isNew = false;
+                }
+
+                let oldX = projectile.x;
+                let oldY = projectile.y;
+                projectile.x += projectile.speed * Math.cos(projectile.angle);
+                projectile.y += projectile.speed * Math.sin(projectile.angle);
+                projectile.distanceTraveled += Math.sqrt(Math.pow(projectile.x - oldX, 2) + Math.pow(projectile.y - oldY, 2));
+                projectile.hasMovedThisTick = true;
+                projectile.update();
+                if (projectile.type === "rocket") 
+                    projectile.particleData = projectile.getParticleData();
+                
+                if (projectile.hasMovedThisTick) {
+                    this.deltaUpdates.updatedProjectiles.push(projectile);
+                    projectile.hasMovedThisTick = false;
+                }
             }
         });
 
-
         Object.values(this.players).forEach(player => {
+            player.hasMovedThisTick = false;
+            player.hasTakenDamageThisTick = false;
+
+            if(this.pendingPlayerMoves[player.id]) 
+                player.hasMovedThisTick = true;
+
+            const socket = io.sockets.sockets.get(player.id);
+            if (socket) {
+                let lastRespTime = Date.now() - player.lastPing;
+                if (lastRespTime > 20000) {
+                    // kickSocket(socket, "ping timeout");
+                    this.removePlayer(player, socket, "Ping timeout.");
+                }
+
+                // Handle player death
+                if (player.health <= 0) {
+                    this.players[player.lastAttacker].kills++;
+                    // kickSocket(socket, "You died!");
+                    this.removePlayer(player, socket, `You died! Killed by: ${this.players[player.lastAttacker].name}`);
+                }
+            }
+
+            if (player.isNew) {
+                this.deltaUpdates.newPlayers[player.id] = player;
+                player.isNew = false;
+            } else if (player.isRemoved) {
+                this.deltaUpdates.removedPlayers.push(player.id);
+                delete this.players[player.id];
+            } else if (player.hasMovedThisTick || player.hasTakenDamageThisTick) {
+                this.deltaUpdates.playerUpdates[player.id] = {
+                    prevX: player.prevX,
+                    prevY: player.prevY,
+                    x: player.x,
+                    y: player.y,
+                    angle: player.angle,
+                    health: player.health
+                };
+                player.hasMovedThisTick = false;
+                player.hasTakenDamageThisTick = false;
+            }
+
             const playerBox = {
                 x: player.x - player.size,
                 y: player.y - player.size,
@@ -151,7 +204,6 @@ class World {
                 h: player.size * 2,
             };
 
-            
             this.projectiles = this.projectiles.filter(p => !p.used)
             for (const obj of this.projectiles) {
                 if(obj.used) 
@@ -177,56 +229,20 @@ class World {
                     if(player.id != obj.shooterId) {
                         player.health -= obj.damage;
                         obj.used = true;
-                        player.lastHit = obj.shooterId;
+                        player.lastAttacker = obj.shooterId;
+                        player.hasTakenDamageThisTick = true;
                     }
                 }
             }
 
             this.leaderboard.createPlayerData(player.id);
         });
-
-        Object.values(this.players).forEach(player => {
-            if (player.isNew) {
-                this.deltaUpdates.newPlayers[player.id] = player;
-                player.isNew = false;
-            }
-            if (player.isRemoved) {
-                this.deltaUpdates.removedPlayers.push(player.id);
-                delete this.players[player.id];
-            }
-        });
-        // this.players = this.players.filter(player => !player.isRemoved);
-
-        // Handle player moves
-        Object.values(this.players).forEach(player => {
-            if (player.hasMoved) {
-                this.deltaUpdates.playerMoves[player.id] = {
-                    x: player.x,
-                    y: player.y,
-                    angle: player.angle
-                };
-                player.hasMoved = false;
-            }
-        });
-
-        // Handle new and removed projectiles
-        this.projectiles.forEach(projectile => {
-            if (projectile.isNew) {
-                this.deltaUpdates.newProjectiles.push(projectile);
-                projectile.isNew = false;
-            }
-            if (projectile.used) {
-                this.deltaUpdates.removedProjectiles.push(projectile.id);
-            }
-            if (projectile.hasMoved) {
-                this.deltaUpdates.updatedProjectiles.push(projectile);
-                projectile.hasMoved = false;
-                console.log(this.deltaUpdates.updatedProjectiles);
-            }
-        });
-        this.projectiles = this.projectiles.filter(projectile => !projectile.used);
-
     }
+
+    removePlayer(player, socket, reason) {
+        socket.emit("kicked", { reason: reason });
+        socket.disconnect();
+    }    
 
     checkCollision(player, gameObjects) {
         const playerBox = {

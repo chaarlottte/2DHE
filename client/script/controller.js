@@ -16,9 +16,15 @@ class Controller {
             sprint: false,
             mouse: false,
         };
+        this.lastFrameTime = Date.now();
     }
 
     doMovement() {
+        const currentTime = Date.now();
+        const deltaTime = (currentTime - this.lastFrameTime) / 1000; 
+        this.lastFrameTime = currentTime;
+        const scaledSpeed = this.localPlayer.speed * deltaTime;
+        
         this.socket.emit("playerInput", { controls: this.controls, rots: { rotX: this.rotX, rotY: this.rotY, angle: this.angle } });
     }    
 

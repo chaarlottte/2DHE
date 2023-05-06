@@ -11,8 +11,8 @@ class Projectile {
         this.rots = rots;
         this.damage = damage;
 
-        this.speed = 15;
-        this.size = 15;
+        this.speed = 50;
+        this.size = 10;
 
         this.angle = Math.atan2(this.rots.rotY, this.rots.rotX);
 
@@ -25,7 +25,7 @@ class Projectile {
         this.range = 5000;
 
         this.isNew = true;
-        this.hasMoved = false;
+        this.hasMovedThisTick = false;
     }
 
     update() {}
@@ -35,7 +35,7 @@ class RocketProjectile extends Projectile {
     constructor(x, y, rots, shooterId, damage) {
         super(x, y, rots, shooterId, damage);
         this.type = "rocket";
-        this.speed = 4;
+        this.speed = 10;
         this.size = 10;
         /*this.trail = [];
         this.maxTrailLength = 10;

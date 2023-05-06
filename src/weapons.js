@@ -7,7 +7,7 @@ class Weapon {
         this.range = range;
         this.maxAliveTime = maxAliveTime;
         this.shotSize = shotSize;
-        this.lastShot = Date.now();
+        this.lastShot = 0;
     }
 
     shoot(world, rots, socketId, shooter) {
@@ -24,7 +24,9 @@ class Weapon {
     }
 
     getRecoil() {
-        return Math.random() * 10;
+        let recoilAmount = 10;
+        let max = recoilAmount / 2, min = (recoilAmount / 2) * -1;
+        return Math.floor(Math.random() * (max - min + 1) + min)
     }
 }
 
@@ -33,27 +35,25 @@ class Pistol extends Weapon {
         super("pistol", 10, 5000, 1000, 1);
         
     }
-
-    getRecoil() {
-        return Math.random() * 10;
-    }
 }
 
 class Shotgun extends Weapon {
     constructor() {
-        super("shotgun", 5, 5000, 1000, 5);
+        super("shotgun", 5, 5000, 1500, 5);
         
         this.lastShot = Date.now();
     }
 
     getRecoil() {
-        return Math.random() * 50;
+        let recoilAmount = 50;
+        let max = recoilAmount / 2, min = (recoilAmount / 2) * -1;
+        return Math.floor(Math.random() * (max - min + 1) + min)
     }
 }
 
 class Rifle extends Weapon {
     constructor() {
-        super("rifle", 5, 5000, 1000, 1);
+        super("rifle", 5, 5000, 3000, 1);
         
     }
 
@@ -68,10 +68,6 @@ class Rifle extends Weapon {
             }
             this.lastShot = Date.now();
         }
-    }
-    
-    getRecoil() {
-        return Math.random() * 10;
     }
 }
 
@@ -102,7 +98,9 @@ class BurstRifle extends Weapon {
     }
     
     getRecoil() {
-        return Math.random() * 3;
+        let recoilAmount = 3;
+        let max = recoilAmount / 2, min = (recoilAmount / 2) * -1;
+        return Math.floor(Math.random() * (max - min + 1) + min)
     }
 }
 
@@ -123,10 +121,6 @@ class RocketLauncher extends Weapon {
             this.alreadyShot = true;
             this.lastShot = Date.now();
         }
-    }
-    
-    getRecoil() {
-        return Math.random() * 10;
     }
 }
 
