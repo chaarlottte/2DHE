@@ -1,4 +1,4 @@
-const { Projectile } = require("./world");
+const { Projectile, RocketProjectile } = require("./projectile");
 
 class Weapon {
     constructor(name, damage, range, maxAliveTime, shotSize) {
@@ -13,7 +13,7 @@ class Weapon {
     shoot(world, rots, socketId, shooter) {
         if(!this.alreadyShot) {
             for(let i = 0; i < this.shotSize; i++) {
-                let p = new Projectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId);
+                let p = new Projectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId, this.damage);
                 p.color = shooter.color;
                 p.range = this.range;
                 p.maxAliveTime = this.maxAliveTime;
@@ -53,14 +53,14 @@ class Shotgun extends Weapon {
 
 class Rifle extends Weapon {
     constructor() {
-        super("pistol", 5, 5000, 1000, 1);
+        super("rifle", 5, 5000, 1000, 1);
         
     }
 
     shoot(world, rots, socketId, shooter) {
         if(Date.now() - this.lastShot >= 50) {
             for(let i = 0; i < this.shotSize; i++) {
-                let p = new Projectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId);
+                let p = new Projectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId, this.damage);
                 p.color = shooter.color;
                 p.range = this.range;
                 p.maxAliveTime = this.maxAliveTime;
@@ -77,7 +77,7 @@ class Rifle extends Weapon {
 
 class BurstRifle extends Weapon {
     constructor() {
-        super("pistol", 5, 5000, 1000, 1);
+        super("burst", 5, 5000, 1000, 1);
         this.burstAmnt = 0;
     }
 
@@ -88,7 +88,7 @@ class BurstRifle extends Weapon {
         }
         if(Date.now() - this.lastShot >= delay) {
             for(let i = 0; i < this.shotSize; i++) {
-                let p = new Projectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId);
+                let p = new Projectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId, this.damage);
                 p.color = shooter.color;
                 p.range = this.range;
                 p.maxAliveTime = this.maxAliveTime;
@@ -106,9 +106,35 @@ class BurstRifle extends Weapon {
     }
 }
 
+class RocketLauncher extends Weapon {
+    constructor() {
+        super("rocket launcher", 50, 1000, 5000, 1);
+    }
+
+    shoot(world, rots, socketId, shooter) {
+        if(Date.now() - this.lastShot >= 1500 && !this.alreadyShot) {
+            for(let i = 0; i < this.shotSize; i++) {
+                let p = new RocketProjectile(shooter.x, shooter.y, { rotX: rots.rotX + this.getRecoil(), rotY: rots.rotY + this.getRecoil()}, socketId, this.damage);
+                p.color = shooter.color;
+                p.range = this.range;
+                p.maxAliveTime = this.maxAliveTime;
+                world.projectiles.push(p);
+            }
+            this.alreadyShot = true;
+            this.lastShot = Date.now();
+        }
+    }
+    
+    getRecoil() {
+        return Math.random() * 10;
+    }
+}
+
+
 if (typeof module !== "undefined" && module.exports) {
     module.exports.Pistol = Pistol;
     module.exports.Rifle = Rifle;
     module.exports.Shotgun = Shotgun;
     module.exports.BurstRifle = BurstRifle;
+    module.exports.RocketLauncher = RocketLauncher;
 }

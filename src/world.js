@@ -99,27 +99,6 @@ function createHouseJSON(x, y, houseWidth, houseHeight, wallThickness, doorWidth
     return houseJSON;
 }
 
-class Projectile {
-    constructor(x, y, rots, shooterId) {
-        this.x = x;
-        this.y = y;
-        this.rots = rots;
-
-        this.speed = 15;
-        this.size = 15;
-
-        this.angle = Math.atan2(this.rots.rotY, this.rots.rotX);
-
-        this.shooterId = shooterId;
-
-        this.used = false;
-        this.time = Date.now();
-        this.maxAliveTime = 1000;
-        this.distanceTraveled = 0;
-        this.range = 5000;
-    }
-}
-  
 class World {
     constructor(worldgen) {
         this.worldgen = worldgen;
@@ -128,31 +107,39 @@ class World {
         this.gameObjects = [ ];
 
         this.projectiles = [ ];
+        this.pendingPlayerMoves = [];
 
         this.leaderboard = new Leaderboard(this.players);
         
-        let houseWidth = 300, houseHeight = 200, wallThickness = 20;
-
-        const houseWalls = createHouseJSON(200, 200, houseWidth, houseHeight, wallThickness, 80, "top");
-        this.gameObjects.push(...houseWalls);
-
-        const houseWalls2 = createHouseJSON(200, 450, houseWidth, houseHeight, wallThickness, 80, "right");
-        this.gameObjects.push(...houseWalls2);
-
-        const houseWalls3 = createHouseJSON(200, 800, houseWidth, houseHeight, wallThickness, 80, "left");
-        this.gameObjects.push(...houseWalls3);
-
-        const houseWalls4 = createHouseJSON(200, 1050, houseWidth, houseHeight, wallThickness, 80, "bottom");
-        this.gameObjects.push(...houseWalls4);
+        this.deltaUpdates = {
+            newPlayers: {},
+            removedPlayers: [],
+            playerMoves: {},
+            newProjectiles: [],
+            removedProjectiles: [],
+            updatedProjectiles: []
+        };
     }
 
     update = () => {
+        this.deltaUpdates.newPlayers = {};
+        this.deltaUpdates.removedPlayers = [];
+        this.deltaUpdates.playerMoves = {};
+        this.deltaUpdates.newProjectiles = [];
+        this.deltaUpdates.removedProjectiles = [];
+        this.deltaUpdates.updatedProjectiles = [];
+
         this.projectiles.forEach(projectile => {
             let oldX = projectile.x;
             let oldY = projectile.y;
             projectile.x += projectile.speed * Math.cos(projectile.angle);
             projectile.y += projectile.speed * Math.sin(projectile.angle);
             projectile.distanceTraveled += Math.sqrt(Math.pow(projectile.x - oldX, 2) + Math.pow(projectile.y - oldY, 2));
+            projectile.hasMoved = true;
+            projectile.update();
+            if (projectile.type === "rocket") {
+                projectile.particleData = projectile.getParticleData();
+            }
         });
 
 
@@ -188,7 +175,7 @@ class World {
                     playerBox.y < objBox.y + objBox.h &&
                     playerBox.y + playerBox.h > objBox.y) {
                     if(player.id != obj.shooterId) {
-                        player.health -= 10;
+                        player.health -= obj.damage;
                         obj.used = true;
                         player.lastHit = obj.shooterId;
                     }
@@ -197,6 +184,48 @@ class World {
 
             this.leaderboard.createPlayerData(player.id);
         });
+
+        Object.values(this.players).forEach(player => {
+            if (player.isNew) {
+                this.deltaUpdates.newPlayers[player.id] = player;
+                player.isNew = false;
+            }
+            if (player.isRemoved) {
+                this.deltaUpdates.removedPlayers.push(player.id);
+                delete this.players[player.id];
+            }
+        });
+        // this.players = this.players.filter(player => !player.isRemoved);
+
+        // Handle player moves
+        Object.values(this.players).forEach(player => {
+            if (player.hasMoved) {
+                this.deltaUpdates.playerMoves[player.id] = {
+                    x: player.x,
+                    y: player.y,
+                    angle: player.angle
+                };
+                player.hasMoved = false;
+            }
+        });
+
+        // Handle new and removed projectiles
+        this.projectiles.forEach(projectile => {
+            if (projectile.isNew) {
+                this.deltaUpdates.newProjectiles.push(projectile);
+                projectile.isNew = false;
+            }
+            if (projectile.used) {
+                this.deltaUpdates.removedProjectiles.push(projectile.id);
+            }
+            if (projectile.hasMoved) {
+                this.deltaUpdates.updatedProjectiles.push(projectile);
+                projectile.hasMoved = false;
+                console.log(this.deltaUpdates.updatedProjectiles);
+            }
+        });
+        this.projectiles = this.projectiles.filter(projectile => !projectile.used);
+
     }
 
     checkCollision(player, gameObjects) {
@@ -236,6 +265,10 @@ class World {
             leaderboard: this.leaderboard,
         };
     }
+
+    getDeltaUpdates = () => {
+        return this.deltaUpdates;
+    }
 }
 
 class Chunk {
@@ -250,5 +283,4 @@ class Chunk {
 if (typeof module !== "undefined" && module.exports) {
     module.exports.World = World;
     module.exports.Chunk = Chunk;
-    module.exports.Projectile = Projectile;
 }

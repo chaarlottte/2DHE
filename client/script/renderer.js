@@ -306,14 +306,46 @@ class Renderer {
 
     renderProjectile(projectile) {
         this.ctx.fillStyle = projectile.color;
-        this.ctx.beginPath();
-        this.ctx.shadowColor = projectile.color;
-        this.ctx.shadowBlur = 100;
-        // this.ctx.shadowOffsetX = 10;
-        // this.ctx.shadowOffsetY = 10;
-        this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
-        this.ctx.closePath();
-        this.ctx.fill();
+        switch(projectile.type) {
+            case "normal":
+                this.ctx.beginPath();
+                this.ctx.shadowColor = projectile.color;
+                this.ctx.shadowBlur = 100;
+                // this.ctx.shadowOffsetX = 10;
+                // this.ctx.shadowOffsetY = 10;
+                this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
+                this.ctx.closePath();
+                this.ctx.fill();
+                break;
+            case "rocket":
+                /*for (let i = projectile.trail.length - 1; i >= 0; i--) {
+                    const smoke = projectile.trail[i];
+                    const opacity = (projectile.trail.length - i) / projectile.trail.length; 
+                    this.ctx.fillStyle = `rgba(128, 128, 128, ${opacity})`;
+                    this.ctx.beginPath();
+                    this.ctx.arc(smoke.x, smoke.y, projectile.trailSize, 0, Math.PI * 2);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                }*/
+
+                this.renderParticleSystem(projectile.fireParticles);
+                this.renderParticleSystem(projectile.smokeParticles);
+    
+                // Render the rocket
+                this.ctx.fillStyle = projectile.color;
+                this.ctx.save(); // Save the current transformation matrix
+                this.ctx.translate(projectile.x, projectile.y);
+                this.ctx.rotate(projectile.angle);
+                this.ctx.rotate(Math.PI / 2);
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, -projectile.size);
+                this.ctx.lineTo(-projectile.size, projectile.size);
+                this.ctx.lineTo(projectile.size, projectile.size);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.restore(); // Restore the transformation matrix
+                break;
+        }
         this.resetShadow();
     }
 
@@ -322,6 +354,21 @@ class Renderer {
         this.ctx.shadowOffsetX = 0;
         this.ctx.shadowOffsetY = 0;
         this.ctx.shadowBlur = 0;
+    }
+
+    renderParticleSystem(system) {
+        for (const particle of system.particles) {
+            this.renderParticle(particle);
+        }
+    }
+
+    renderParticle(particle) {
+        const opacity = particle.life / particle.maxLife;
+        this.ctx.fillStyle = `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, ${opacity})`;
+        this.ctx.beginPath();
+        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        this.ctx.closePath();
+        this.ctx.fill();
     }
 
     drawChunk(chunk) {

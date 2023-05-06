@@ -1,4 +1,4 @@
-const { Pistol, Rifle, Shotgun, BurstRifle } = require("./weapons");
+const { Pistol, Rifle, Shotgun, BurstRifle, RocketLauncher } = require("./weapons");
 
 class Player {
     constructor(x, y, id) {
@@ -31,7 +31,11 @@ class Player {
 
         this.acFlags = 0;
 
-        this.weapon = new BurstRifle();
+        this.weapon = new RocketLauncher();
+
+        this.isNew = true;
+        this.isRemoved = false;
+        this.hasMoved = false;
     }
 }
 

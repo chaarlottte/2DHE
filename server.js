@@ -4,7 +4,8 @@ const socketIO = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
-const { World, Projectile } = require("./src/world");
+const { World } = require("./src/world");
+const { Projectile } = require("./src/projectile");
 const { WorldGeneration } = require("./src/worldgen");
 const { Pistol, Rifle, Shotgun } = require("./src/weapons");
 const { Player } = require("./src/player");
@@ -31,11 +32,42 @@ function kickSocket(socket, reason) {
     socket.disconnect();
 }
 
-const worldUpdateThread = setInterval(() => {
+/*const worldUpdateThread = setInterval(() => {
     world.update();
     
     io.emit("worldUpdate", world.getWorldData());
-}, 1000 / 60);
+}, 1000 / 30);*/
+
+const worldUpdateThread = setInterval(() => {
+    world.update();
+
+    if (world.pendingPlayerMoves.length > 0) {
+        io.emit("playerMoves", world.pendingPlayerMoves);
+        world.pendingPlayerMoves = [];
+    }
+    
+    // Handle player-specific updates within the main world update loop
+    Object.values(world.players).forEach(player => {
+        const socket = io.sockets.sockets.get(player.id);
+        if (!socket) return;
+
+        // Handle player ping timeout
+        let lastRespTime = Date.now() - player.lastPing;
+        if (lastRespTime > 20000) {
+            kickSocket(socket, "ping timeout");
+        }
+
+        // Handle player death
+        if (player.health <= 0) {
+            player.kills++;
+            console.log("player died");
+            kickSocket(socket, "You died!");
+        }
+    });
+
+    // io.emit("worldUpdate", world.getWorldData());
+    io.emit("worldUpdate", world.getDeltaUpdates());
+}, 1000 / 30);
 
 io.on("connection", (socket) => {
     let initialized = false;
@@ -51,23 +83,6 @@ io.on("connection", (socket) => {
         socket.emit("initialize", { world, playerId: socket.id });
         socket.broadcast.emit("playerJoined", world.players[socket.id]);
     });
-
-    const socketPingThread = setInterval(() => {
-        if (!initialized) return;
-        let lastRespTime = Date.now() - world.players[socket.id].lastPing;
-        if(lastRespTime > 20000) {
-            kickSocket(socket, "ping timeout");
-        }
-    }, 10000);
-
-    const playerUpdateThread = setInterval(() => {
-        if (!initialized) return;
-        if (world.players[socket.id].health <= 0) {
-            world.players[world.players[socket.id].lastHit].kills++;
-            console.log("player died");
-            kickSocket(socket, "You died!");
-         }
-    }, 1000 / 60)
 
     /*socket.on("playerMove", (playerData) => {
         let player = world.players[socket.id];
@@ -152,24 +167,15 @@ io.on("connection", (socket) => {
         // console.log(data);
 
         // console.log(playerData)
-        socket.broadcast.emit("playerMoved", { playerId: socket.id, x: player.x, y: player.y, angle: data.angle });
-    });
-
-    socket.on("playerShoot", (data) => {
-        if (!initialized) return;
-        for(let i = 0; i < 5; i++) {
-            let p = new Projectile(world.players[socket.id].x, world.players[socket.id].y, { rotX: data.rotX + Math.random() * 50, rotY: data.rotY + Math.random() * 50 }, socket.id);
-            p.color = world.players[socket.id].color;
-            world.projectiles.push(p);
-        }
+        // socket.broadcast.emit("playerMoved", { playerId: socket.id, x: player.x, y: player.y, angle: data.angle });
+        player.hasMoved = true;
+        world.pendingPlayerMoves.push({ playerId: socket.id, x: player.x, y: player.y, angle: data.angle });
     });
     
     socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
         delete world.players[socket.id];
         socket.broadcast.emit("playerDisconnected", socket.id);
-        clearInterval(socketPingThread);
-        clearInterval(playerUpdateThread);
     });
 });
 
