@@ -37,6 +37,7 @@ io.on("connection", (socket) => {
         world.players[socket.id].color = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
         world.players[socket.id].name = data.username;
         world.players[socket.id].shape = data.shape;
+        world.players[socket.id].weapon = world.players[socket.id].getWeaponFromString(data.weapon);
 
         socket.emit("initialize", { world, playerId: socket.id });
         socket.broadcast.emit("playerJoined", world.players[socket.id]);
@@ -89,7 +90,10 @@ io.on("connection", (socket) => {
         player.angle = data.rots.angle;
 
         if(data.controls.mouse) {
-            player.weapon.shoot(world, data.rots, socket.id, player);
+            if(player.weapon.shoot(world, data.rots, socket.id, player)) {
+                player.weapon.muzzleFlash(player);
+                player.hasShot = true;
+            }
         } else {
             player.weapon.alreadyShot = false;
         }
@@ -140,4 +144,4 @@ app.get("/js/:filename", (req, res) => {
 
 app.use(express.static("client"));
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+server.listen(PORT, "0.0.0.0", () => console.log(`Server listening on port ${PORT}`));

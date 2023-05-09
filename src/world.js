@@ -159,6 +159,8 @@ class World {
             player.hasMovedThisTick = false;
             player.hasTakenDamageThisTick = false;
 
+            player.muzzleFlashParticles.update();
+
             if(this.pendingPlayerMoves[player.id]) 
                 player.hasMovedThisTick = true;
 
@@ -184,17 +186,19 @@ class World {
             } else if (player.isRemoved) {
                 this.deltaUpdates.removedPlayers.push(player.id);
                 delete this.players[player.id];
-            } else if (player.hasMovedThisTick || player.hasTakenDamageThisTick) {
+            } else if (player.hasMovedThisTick || player.hasTakenDamageThisTick || player.hasShot) {
                 this.deltaUpdates.playerUpdates[player.id] = {
                     prevX: player.prevX,
                     prevY: player.prevY,
                     x: player.x,
                     y: player.y,
                     angle: player.angle,
-                    health: player.health
+                    health: player.health,
+                    muzzleFlashParticles: player.muzzleFlashParticles
                 };
                 player.hasMovedThisTick = false;
                 player.hasTakenDamageThisTick = false;
+                player.hasShot = false;
             }
 
             const playerBox = {
@@ -237,6 +241,8 @@ class World {
 
             this.leaderboard.createPlayerData(player.id);
         });
+
+        this.deltaUpdates.updatedProjectiles = this.deltaUpdates.updatedProjectiles.filter(p => !p.used)
     }
 
     removePlayer(player, socket, reason) {

@@ -21,7 +21,7 @@ function startGame() {
 
     game.connect();
 
-    setInterval(gameLoop, 1000 / 120);
+    setInterval(gameLoop, 1000 / 240);
     setInterval(inputLoop, 1000 / 30);
 }
 

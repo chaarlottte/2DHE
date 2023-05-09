@@ -11,7 +11,7 @@ class Projectile {
         this.rots = rots;
         this.damage = damage;
 
-        this.speed = 50;
+        this.speed = 30;
         this.size = 10;
 
         this.angle = Math.atan2(this.rots.rotY, this.rots.rotX);
@@ -63,7 +63,29 @@ class RocketProjectile extends Projectile {
     }
 }
 
+class BulletProjectile extends Projectile {
+    constructor(x, y, rots, shooterId, damage) {
+        super(x, y, rots, shooterId, damage);
+        this.type = "bullet";
+
+        this.trailParticles = new ParticleSystem();
+    }
+
+    update() {
+        const trailColor = { r: 255, g: 255, b: 255 };
+        this.trailParticles.emit(this.x, this.y, trailColor);
+        this.trailParticles.update();
+    }
+
+    getParticleData() {
+        return {
+            trailParticles: this.trailParticles.particles
+        };
+    }
+}
+
 if (typeof module !== "undefined" && module.exports) {
     module.exports.Projectile = Projectile;
     module.exports.RocketProjectile = RocketProjectile;
+    module.exports.BulletProjectile = BulletProjectile;
 }

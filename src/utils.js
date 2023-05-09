@@ -32,6 +32,21 @@ class UtilitiesClass {
         return chunk;
     }
 
+    static extractRGBValues(rgbString) {
+        // Use a regular expression to match all numbers in the string
+        const matches = rgbString.match(/(\d+)\.\d+/g);
+        if (matches) {
+            // Convert the matched substrings to integers and return them as an object
+            const r = parseInt(matches[0], 10);
+            const g = parseInt(matches[1], 10);
+            const b = parseInt(matches[2], 10);
+            return { r, g, b };
+        }
+        // If the string is not in the expected format, return null
+        return null;
+    }
+      
+
 }
 
 if (typeof module !== "undefined" && module.exports) {

@@ -167,6 +167,7 @@ class Renderer {
         this.ctx.save();
         const interpX = player.prevX + (player.x - player.prevX);
         const interpY = player.prevY + (player.y - player.prevY);
+        this.renderParticleSystem(player.muzzleFlashParticles.particles);
         this.ctx.translate(interpX, interpY);
         this.ctx.rotate(player.angle);
         this.ctx.fillStyle = player.color;
@@ -306,25 +307,11 @@ class Renderer {
         switch(projectile.type) {
             case "normal":
                 this.ctx.beginPath();
-                this.ctx.shadowColor = projectile.color;
-                this.ctx.shadowBlur = 100;
-                // this.ctx.shadowOffsetX = 10;
-                // this.ctx.shadowOffsetY = 10;
                 this.ctx.arc(interpolateProjectile.x, interpolateProjectile.y, projectile.size / 2, 0, Math.PI * 2);
                 this.ctx.closePath();
                 this.ctx.fill();
                 break;
             case "rocket":
-                /*for (let i = projectile.trail.length - 1; i >= 0; i--) {
-                    const smoke = projectile.trail[i];
-                    const opacity = (projectile.trail.length - i) / projectile.trail.length; 
-                    this.ctx.fillStyle = `rgba(128, 128, 128, ${opacity})`;
-                    this.ctx.beginPath();
-                    this.ctx.arc(smoke.x, smoke.y, projectile.trailSize, 0, Math.PI * 2);
-                    this.ctx.closePath();
-                    this.ctx.fill();
-                }*/
-
                 this.renderParticleSystem(projectile.fireParticles);
                 this.renderParticleSystem(projectile.smokeParticles);
     
@@ -342,8 +329,26 @@ class Renderer {
                 this.ctx.fill();
                 this.ctx.restore(); // Restore the transformation matrix
                 break;
+            case "bullet":
+                // Render the particle trail
+                //this.renderParticleSystem(projectile.trailParticles.particles);
+
+                this.ctx.save(); // Save the current transformation matrix
+                this.ctx.translate(interpolateProjectile.x, interpolateProjectile.y);
+                this.ctx.rotate(projectile.angle);
+                this.ctx.rotate(Math.PI / 2);
+                this.ctx.beginPath();
+                // Draw the body of the bullet (rectangle)
+                this.ctx.rect(-projectile.size / 4, -projectile.size / 2, projectile.size / 2, projectile.size / 2);
+                // Draw the tip of the bullet (triangle)
+                this.ctx.moveTo(-projectile.size / 4, -projectile.size / 2);
+                this.ctx.lineTo(projectile.size / 4, -projectile.size / 2);
+                this.ctx.lineTo(0, -projectile.size);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.restore(); 
+                break;
         }
-        this.resetShadow();
     }
 
     resetShadow() {

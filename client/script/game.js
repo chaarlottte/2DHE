@@ -11,14 +11,19 @@ class Game {
     connect() {
         let username = "test";
         let shape = "triangle";
+        let weapon = "pistol";
 
-        // username = window.prompt("Username: ", "");
-        // shape = window.prompt("Shape: ", "square, triangle, circle, cat");
-        while(!["triangle", "square", "circle", "cat"].includes(shape)) {
+        username = window.prompt("Username: ", "");
+        shape = window.prompt("Shape: ", "square, triangle, circle, cat");
+        while(!["triangle", "square", "circle", "cat"].includes(shape)) 
             shape = window.prompt("Shape: ", "square, triangle, circle, cat");
-        }
+
+        weapon = window.prompt("Weapon: ", "pistol, rifle, shotgun, burst, RPG");
+        while(!["pistol", "rifle", "shotgun", "burst", "rpg"].includes(weapon.toLocaleLowerCase())) 
+        weapon = window.prompt("Weapon: ", "pistol, rifle, shotgun, burst, RPG");
+        
         this.socket = io();
-        this.socket.emit("setUserData", { username: username, shape: shape })
+        this.socket.emit("setUserData", { username: username, shape: shape, weapon: weapon })
         this.socket.on("initialize", (data) => {
             this.connected = true;
 
@@ -77,6 +82,7 @@ class Game {
                 this.world.players[id].prevY = updates.prevY;
                 this.world.players[id].angle = updates.angle;
                 this.world.players[id].health = updates.health;
+                this.world.players[id].muzzleFlashParticles = updates.muzzleFlashParticles;
             });
 
             // Add new projectiles
@@ -88,8 +94,8 @@ class Game {
             });
 
             deltaUpdates.updatedProjectiles.forEach((updatedProjectile) => {
-                const existingProjectile = this.world.projectiles.find(projectile => projectile.id === updatedProjectile.id);
-                const notRemovedProjectile = deltaUpdates.removedProjectiles.find(projectile => projectile.id === updatedProjectile.id);
+                const existingProjectile = this.world.projectiles.find(projectile => projectile && projectile.id === updatedProjectile.id);
+                const notRemovedProjectile = deltaUpdates.removedProjectiles.find(projectile => projectile && projectile.id === updatedProjectile.id);
                 
                 if (existingProjectile && !notRemovedProjectile) {
                     existingProjectile.x = updatedProjectile.x;
@@ -110,12 +116,12 @@ class Game {
             let toBeRemoved = [];
             // Remove projectiles that have been removed
             deltaUpdates.removedProjectiles.forEach((removedProjectileId) => {
-                // this.world.projectiles = this.world.projectiles.filter(projectile => projectile.id !== removedProjectileId);
-                let index = 0;
+                this.world.projectiles = this.world.projectiles.filter(projectile => projectile.id !== removedProjectileId);
+                /*let index = 0;
                 this.world.projectiles.forEach((projectile) => {
                     toBeRemoved.push(index);
                     index++;
-                });
+                });*/
             })
 
             for(let i in toBeRemoved) {
