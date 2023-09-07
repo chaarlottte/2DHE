@@ -4,7 +4,7 @@
     "javascript-obfuscator": "^4.0.2",
     "js-beautify": "^1.14.7",
     "lerp": "^1.0.3",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.0.1",
     "socket.io": "^4.6.1",
     "uglify-js": "^3.17.4"
   },

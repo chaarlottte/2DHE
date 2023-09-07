@@ -177,6 +177,7 @@ class World {
                     this.players[player.lastAttacker].kills++;
                     // kickSocket(socket, "You died!");
                     this.removePlayer(player, socket, `You died! Killed by: ${this.players[player.lastAttacker].name}`);
+                    player.isRemoved = true;
                 }
             }
 
@@ -210,9 +211,12 @@ class World {
 
             this.projectiles = this.projectiles.filter(p => !p.used)
             for (const obj of this.projectiles) {
-                if(obj.used) 
-                    continue
+                if(this.deltaUpdates.removedPlayers.includes(obj.shooterId))
+                    obj.used = true;
                 
+                if(obj.used) 
+                    this.deltaUpdates.removedProjectiles.push(obj.id);
+
                 const objBox = {
                     x: obj.x,
                     y: obj.y,
@@ -242,7 +246,7 @@ class World {
             this.leaderboard.createPlayerData(player.id);
         });
 
-        this.deltaUpdates.updatedProjectiles = this.deltaUpdates.updatedProjectiles.filter(p => !p.used)
+        this.deltaUpdates.updatedProjectiles = this.deltaUpdates.updatedProjectiles;
     }
 
     removePlayer(player, socket, reason) {
